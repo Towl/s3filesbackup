@@ -1,5 +1,4 @@
 #!/bin/sh
-mkdir /data
 NOW="$(date +%Y-%m-%d_%Hh%Mm%S)"
 echo "==> Authenticate to gcloud"
 gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS

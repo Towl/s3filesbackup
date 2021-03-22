@@ -1,5 +1,4 @@
 #!/bin/sh
-mkdir /data
 cd /data
 echo "==> Authenticate to gcloud"
 gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
