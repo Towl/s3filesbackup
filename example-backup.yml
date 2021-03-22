@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-auto
+  labels:
+    app: backup-auto
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-auto
+subjects:
+  - kind: ServiceAccount
+    name: backup-auto
+roleRef:
+  kind: ClusterRole
+  name: edit
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell
+  labels:
+    app: shell
+spec:
+  serviceAccountName: backup-auto
+  containers:
+    - name: shell
+      image: google/cloud-sdk
+      command: ["tail", "-f", "/dev/stdout"]
+      resources:
+        limits:
+          cpu: 250m
+          memory: 250M
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/var/secrets/gcloud/tms-software.json"
+        - name: BACKUP_POD_LABEL
+          value: app.kubernetes.io/instance=tms-wordpress
+        - name: PARENT_FOLDER
+          value: /bitnami
+        - name: RELATIVE_PATH
+          value: wordpress/wp-content/plugins
+        - name: ARCHIVE_NAME
+          value: tms-wordpress-plugins
+        - name: BUCKET
+          value: tms-wordpress-276410
+        - name: PREFIX
+          value: backups/plugins
+      volumeMounts:
+        - name: gcloud-credentials
+          mountPath: "/var/secrets/gcloud"
+          readOnly: true
+  volumes:
+    - name: gcloud-credentials
+      secret:
+        secretName: gcloud-service-account
+        items:
+          - key: credentials
+            path: tms-software.json

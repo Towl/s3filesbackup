@@ -1,6 +1,4 @@
-FROM amazon/aws-cli
-
-RUN yum update -y && yum install -y tar && yum clean all && rm -rf /var/cache/yum
+FROM google/cloud-sdk
 
 COPY backup.sh /tmp
 
