@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 echo "==> Authenticate to gcloud"
 gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 echo "==> Identify pod to backup"

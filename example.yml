@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-auto
+  labels:
+    app: backup-auto
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-auto
+subjects:
+  - kind: ServiceAccount
+    name: backup-auto
+roleRef:
+  kind: ClusterRole
+  name: edit
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wordpress-plugin-backup
+spec:
+  ttlSecondsAfterFinished: 259200
+  template:
+    spec:
+      serviceAccountName: backup-auto
+      containers:
+      - name: s3filesbackup
+        image: towl/s3filesbackup:gcloud
+        command: ["./backup.sh"]
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/var/secrets/gcloud/creds.json"
+          - name: BACKUP_POD_LABEL
+            value: app.kubernetes.io/instance=wordpress
+          - name: PARENT_FOLDER
+            value: /bitnami
+          - name: RELATIVE_PATH
+            value: wordpress/wp-content/plugins
+          - name: ARCHIVE_NAME
+            value: wordpress-plugins
+          - name: BUCKET
+            value: my-bucket
+          - name: PREFIX
+            value: backups
+        resources:
+          limits:
+            cpu: 250m
+            memory: 250M
+          requests:
+            cpu: 250m
+            memory: 250M
+        volumeMounts:
+          - name: gcloud-credentials
+            mountPath: "/var/secrets/gcloud"
+            readOnly: true
+      volumes:
+        - name: gcloud-credentials
+          secret:
+            secretName: gcloud-service-account
+            items:
+              - key: credentials
+                path: creds.json
+      restartPolicy: OnFailure
