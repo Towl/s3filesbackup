@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-s3-file-backup
+spec:
+  imagePullSecrets:
+  - name: tms-gcr-registry
+  serviceAccount: tms-wordpress
+  containers:
+  - name: test-s3-file-backup
+    image: eu.gcr.io/warm-canto-276410/s3-file-backup
+    imagePullPolicy: Always
+    command: ["tail", "-f", "/dev/stdout"]
+    env:
+      - name: BACKUP_POD_LABEL
+        value: app.kubernetes.io/instance=tms-wordpress
+      - name: PARENT_FOLDER
+        value: /bitnami
+      - name: RELATIVE_PATH
+        value: wordpress
+      - name: ARCHIVE_NAME
+        value: wordpress
+      - name: BUCKET
+        value: tms-wordpress-276410
+      - name: PREFIX
+        value: backups
+      - name: TAR_OPTS
+        value: "--exclude='wordpress/.initialized' --exclude='wordpress/.restored' --exclude='wordpress/wp-content'"
+    resources:
+      limits:
+        cpu: 250m
+        memory: 250M
+      requests:
+        cpu: 250m
+        memory: 250M

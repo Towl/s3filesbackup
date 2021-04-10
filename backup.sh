@@ -1,11 +1,17 @@
 #!/bin/bash
-echo "==> Authenticate to gcloud"
-gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 echo "==> Identify pod to backup"
+echo "exec: kubectl get pod -l $BACKUP_POD_LABEL -o name"
 POD=$(kubectl get pod -l $BACKUP_POD_LABEL -o name)
+echo "selected pod: $POD"
+
 echo "==> Backup file from $POD:$PARENT_FOLDER/$RELATIVE_PATH"
-kubectl exec $POD -- tar -C $PARENT_FOLDER $RELATIVE_PATH -cf - $RELATIVE_PATH | tar xfv - -C /data
+tar_opts=($TAR_OPTS)
+extract_cmd="kubectl exec $POD -- tar ${tar_opts[@]} -C $PARENT_FOLDER $RELATIVE_PATH -cf - $RELATIVE_PATH | tar xf - -C /data"
+echo "exec: $extract_cmd"
+eval $extract_cmd
+
 echo "==> Compress backup into $ARCHIVE_NAME.tar.gz"
+echo "exec: tar -C /data -czf $ARCHIVE_NAME.tar.gz ."
 tar -C /data -czf $ARCHIVE_NAME.tar.gz .
 
 VERSIONING_ENABLED=$(gsutil versioning get gs://$BUCKET/ | grep Enabled)
@@ -19,5 +25,7 @@ else
 fi
 
 echo "==> Sent arhcive to gs://$BUCKET/$PREFIX/$BUCKET_ARCHIVE_NAME"
+echo "exec: gsutil cp $ARCHIVE_NAME.tar.gz gs://$BUCKET/$PREFIX/$BUCKET_ARCHIVE_NAME"
 gsutil cp $ARCHIVE_NAME.tar.gz gs://$BUCKET/$PREFIX/$BUCKET_ARCHIVE_NAME
+
 echo "==> Done"

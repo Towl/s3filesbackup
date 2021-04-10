@@ -1,7 +1,9 @@
-FROM google/cloud-sdk
+FROM google/cloud-sdk:alpine
 
-COPY backup.sh /tmp
+RUN gcloud components install kubectl
 
-RUN chmod a+x /tmp/backup.sh && mkdir /data
+COPY --chmod=755 backup.sh restore.sh install.sh /tmp
+
+VOLUME ["/data"]
 
 WORKDIR /tmp
