@@ -11,7 +11,7 @@ echo "exec: $extract_cmd"
 eval $extract_cmd
 
 echo "==> Save current files to gs://$BUCKET/$PREFIX"
-echo "exec: gsutil cp $ARCHIVE_NAME.tar.gz gs://$BUCKET/$PREFIX"
+echo "exec: gsutil -m rsync -d -r /data gs://$BUCKET/$PREFIX"
 gsutil -m rsync -d -r /data gs://$BUCKET/$PREFIX
 
 echo "==> Done"
